@@ -120,6 +120,11 @@
   border-top: 1px solid var(--line);
 }
 
+.audio-toggle {
+  align-self: center;
+  min-width: 104px;
+}
+
 .intro-hint {
   margin: 16px 0 0;
   color: var(--paper-muted);

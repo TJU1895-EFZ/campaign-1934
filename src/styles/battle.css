@@ -17,6 +17,43 @@
   cursor: crosshair;
 }
 
+.unity-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #05090b;
+}
+
+.unity-controls {
+  position: fixed;
+  z-index: 5;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  gap: 8px;
+}
+
+.unity-controls .btn {
+  min-height: 36px;
+  padding: 7px 12px;
+  background: rgba(5, 9, 11, 0.72);
+}
+
+.unity-help {
+  position: fixed;
+  z-index: 5;
+  bottom: 12px;
+  left: 50%;
+  margin: 0;
+  padding: 7px 12px;
+  color: rgba(239, 230, 212, 0.78);
+  background: rgba(5, 9, 11, 0.68);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
 .battle-screen.is-paused .battle-root canvas {
   cursor: default;
 }

@@ -9,6 +9,7 @@ import { ResultScreen } from './screens/ResultScreen';
 import { ErrorScreen } from './screens/ErrorScreen';
 import type { QuizResult } from '../content/quiz';
 import { loadSettings, saveSettings, type Settings } from '../utils/storage';
+import { shellAudio } from '../audio/ShellAudio';
 
 export class App {
   state: AppState = 'intro';
@@ -31,6 +32,7 @@ export class App {
   }
 
   showIntro(): void {
+    shellAudio.enterShell();
     this.setScreen(
       'intro',
       new IntroScreen({
@@ -40,6 +42,7 @@ export class App {
   }
 
   showOverview(): void {
+    shellAudio.enterShell();
     this.setScreen(
       'overview',
       new OverviewScreen({
@@ -52,6 +55,7 @@ export class App {
   }
 
   startBattle(): void {
+    shellAudio.leaveShell();
     this.quizResult = null;
     this.summary = null;
     this.setScreen(

@@ -6,6 +6,20 @@ test-results/
 playwright-report/
 shots/
 .pages-test/
+.local-tools/
+# Unity 只提交 Assets、Packages 和 ProjectSettings；其余均可由编辑器重建
+unity/Campaign1934/[Ll]ibrary/
+unity/Campaign1934/[Tt]emp/
+unity/Campaign1934/[Oo]bj/
+unity/Campaign1934/[Bb]uild/
+unity/Campaign1934/[Bb]uilds/
+unity/Campaign1934/[Ll]ogs/
+unity/Campaign1934/[Uu]ser[Ss]ettings/
+unity/Campaign1934/MemoryCaptures/
+unity/Campaign1934/Recordings/
+unity/Campaign1934/.vscode/
+unity/Campaign1934/*.csproj
+unity/Campaign1934/*.sln
 # art/ 已改为提交到仓库，V1.1 接手方从 GitHub fork/clone 即可获取素材
 # 仅忽略本机临时参考素材（非项目方提供的正式素材）
 art-local-ref/

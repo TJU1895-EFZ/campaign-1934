@@ -1,5 +1,6 @@
 import type { Screen } from '../Screen';
 import { BATTLES, type BattleCardData } from '../../content/battles';
+import { shellAudio } from '../../audio/ShellAudio';
 
 interface OverviewScreenOptions {
   onSelect: (battleId: string) => void;
@@ -42,6 +43,8 @@ export class OverviewScreen implements Screen {
 
     root.querySelectorAll<HTMLButtonElement>('[data-battle-id]').forEach((card) => {
       card.addEventListener('click', this.handleCardClick);
+      card.addEventListener('pointerenter', this.handleCardPreview);
+      card.addEventListener('focus', this.handleCardPreview);
     });
   }
 
@@ -54,6 +57,8 @@ export class OverviewScreen implements Screen {
     backButton?.removeEventListener('click', this.handleBack);
     this.root?.querySelectorAll<HTMLButtonElement>('[data-battle-id]').forEach((card) => {
       card.removeEventListener('click', this.handleCardClick);
+      card.removeEventListener('pointerenter', this.handleCardPreview);
+      card.removeEventListener('focus', this.handleCardPreview);
     });
     this.root = null;
   }
@@ -104,6 +109,11 @@ export class OverviewScreen implements Screen {
       return;
     }
     this.options.onSelect(battle.id);
+  };
+
+  private handleCardPreview = (event: Event): void => {
+    const id = (event.currentTarget as HTMLButtonElement).dataset.battleId;
+    shellAudio.playCardHover(BATTLES.some((battle) => battle.id === id && battle.playable));
   };
 
   private showToast(): void {

@@ -1,0 +1,33 @@
+{
+  "name": "soldier_kmt",
+  "seed": 1935,
+  "gender": 1,
+  "age": 0.55,
+  "muscle": 0.66,
+  "weight": 0.48,
+  "height": 0.52,
+  "african": 0.02,
+  "asian": 0.93,
+  "caucasian": 0.05,
+  "hair": "buzz",
+  "facialHair": "none",
+  "outfit": "none",
+  "top": "fatigue_shirt",
+  "bottom": "fatigue_pants",
+  "shoes": "combat_boots",
+  "accessories": ["helmet", "belt"],
+  "garmentStyles": {
+    "fatigue_shirt": { "pattern": "solid", "color": "#7a7850" },
+    "fatigue_pants": { "pattern": "solid", "color": "#6d6d48" },
+    "helmet": { "pattern": "solid", "color": "#4d5035" },
+    "belt": { "pattern": "solid", "color": "#493a25" }
+  },
+  "detail": "low",
+  "rig": "game",
+  "restPose": "T",
+  "animations": true,
+  "weapon": "rifle",
+  "faceBones": false,
+  "faceShapes": false,
+  "speechShapes": false
+}
