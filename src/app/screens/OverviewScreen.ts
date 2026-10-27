@@ -4,11 +4,14 @@ import { BATTLES, type BattleCardData } from '../../content/battles';
 interface OverviewScreenOptions {
   onSelect: (battleId: string) => void;
   onBack: () => void;
+  onHoverSound?: (locked: boolean) => void;
 }
 
 export class OverviewScreen implements Screen {
   private root: HTMLElement | null = null;
   private toastTimer: number | null = null;
+  private hoverThrottle: number = 0;
+  private readonly HOVER_THROTTLE_MS = 200;
 
   constructor(private readonly options: OverviewScreenOptions) {}
 
@@ -42,6 +45,8 @@ export class OverviewScreen implements Screen {
 
     root.querySelectorAll<HTMLButtonElement>('[data-battle-id]').forEach((card) => {
       card.addEventListener('click', this.handleCardClick);
+      card.addEventListener('pointerenter', this.handleCardHover);
+      card.addEventListener('focus', this.handleCardFocus);
     });
   }
 
@@ -54,6 +59,8 @@ export class OverviewScreen implements Screen {
     backButton?.removeEventListener('click', this.handleBack);
     this.root?.querySelectorAll<HTMLButtonElement>('[data-battle-id]').forEach((card) => {
       card.removeEventListener('click', this.handleCardClick);
+      card.removeEventListener('pointerenter', this.handleCardHover);
+      card.removeEventListener('focus', this.handleCardFocus);
     });
     this.root = null;
   }
@@ -92,6 +99,28 @@ export class OverviewScreen implements Screen {
 
   private handleBack = (): void => {
     this.options.onBack();
+  };
+
+  private handleCardHover = (event: Event): void => {
+    const now = performance.now();
+    if (now - this.hoverThrottle < this.HOVER_THROTTLE_MS) return;
+    this.hoverThrottle = now;
+    const card = (event.currentTarget as HTMLElement).closest('[data-battle-id]');
+    const battle = card && card instanceof HTMLElement
+      ? BATTLES.find((b) => b.id === card.dataset.battleId)
+      : undefined;
+    this.options.onHoverSound?.(battle ? !battle.playable : false);
+  };
+
+  private handleCardFocus = (event: Event): void => {
+    const now = performance.now();
+    if (now - this.hoverThrottle < this.HOVER_THROTTLE_MS) return;
+    this.hoverThrottle = now;
+    const card = (event.currentTarget as HTMLElement).closest('[data-battle-id]');
+    const battle = card && card instanceof HTMLElement
+      ? BATTLES.find((b) => b.id === card.dataset.battleId)
+      : undefined;
+    this.options.onHoverSound?.(battle ? !battle.playable : false);
   };
 
   private handleCardClick = (event: Event): void => {

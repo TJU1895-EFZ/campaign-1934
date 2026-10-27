@@ -75,6 +75,12 @@ export class BattleRuntime {
   private highFpsWindows = 0;
   private victoryTimer: number | null = null;
 
+  // D2: bunker→street transition cutscene state
+  private d2TransitionActive = false;
+  private d2TransitionEndsAt = 0;
+  private d2ChargeBots: Bot[] = [];
+  private d2VocalPlayed = false;
+
   constructor(host: HTMLElement, options: BattleRuntimeOptions) {
     this.host = host;
     this.options = options;
@@ -258,6 +264,12 @@ export class BattleRuntime {
         if (remaining <= 0) {
           this.beginBattle();
         }
+      } else if (this.d2TransitionActive) {
+        // D2: run transition cutscene instead of normal phase logic
+        this.updateD2Transition(dt);
+        this.battleScene.update(dt);
+        this.tracers.update(dt);
+        this.updateFps(dt);
       } else {
         this.director.update(dt);
         this.player.update(dt);
@@ -313,6 +325,12 @@ export class BattleRuntime {
   }
 
   private handlePhase(phaseName: string, narrationId: string, index: number): void {
+    // D2: intercept phase 3→4 transition to insert charge cutscene
+    if (index === 3 && this.battleStarted && !this.d2TransitionActive) {
+      this.startD2Transition(narrationId);
+      return;
+    }
+
     const phaseConfig = PHASES[index];
     if (phaseConfig && this.currentZone !== phaseConfig.zone) {
       this.currentZone = phaseConfig.zone;
@@ -328,9 +346,11 @@ export class BattleRuntime {
       this.bots.stageRedFormation(98);
     }
     if (index === 2) {
-      // The first assault has failed: the leading Red bots are cut down,
-      // visibly pulling the line back before the second charge.
-      this.bots.repulseFrontRedBots(3);
+      // C2: First assault failed — show squad-level collapse + pushback.
+      // Kill front bots in groups of 3–4, then pull the line back.
+      this.bots.repulseFrontRedBots(5);
+      // Pull back visible bots to show the line retreating
+      this.bots.pushBackFrontline(8);
     }
     const text = NARRATION[narrationId];
     if (text) {
@@ -362,6 +382,88 @@ export class BattleRuntime {
       }
     } else {
       this.battleScene.setMachineGunFiring(false);
+    }
+  }
+
+  /** D2: bunker→street charge transition — 2–4 red bots charge into street, main force follows */
+  private startD2Transition(narrationId: string): void {
+    this.d2TransitionActive = true;
+    this.d2TransitionEndsAt = performance.now() + 8000; // 8 seconds mid-range of 6–10s
+    this.d2VocalPlayed = false;
+
+    // Disable desync penalty during cutscene
+    this.player.setEnabled(false);
+    this.weapon.setEnabled(false);
+
+    // Pick 2–4 charge bots from front-line red bots
+    const aliveRed = this.bots.getBots().filter(
+      (bot) => bot.alive && bot.faction === 'red' && bot.group.visible,
+    );
+    const chargeCount = 2 + Math.floor(Math.random() * 3); // 2–4
+    aliveRed.sort((a, b) => b.group.position.z - a.group.position.z);
+    this.d2ChargeBots = aliveRed.slice(0, chargeCount);
+
+    // Move charge bots to bridge edge and set them charging into street
+    for (const bot of this.d2ChargeBots) {
+      bot.group.position.set(
+        (Math.random() - 0.5) * 1.5,
+        8,
+        28 + Math.random() * 2,
+      );
+      bot.targetZ = -50 - Math.random() * 10;
+      bot.speed = 4.5; // sprint speed
+      bot.state = 'advance';
+    }
+
+    // Pull back remaining red bots to staging position
+    for (const bot of aliveRed) {
+      if (this.d2ChargeBots.includes(bot)) continue;
+      bot.group.position.z = Math.min(bot.group.position.z, 20);
+      bot.targetZ = bot.group.position.z + 5;
+      bot.state = 'advance';
+    }
+
+    this.hud.setSubtitle('突击队员冲出碉堡火力网，向街巷纵深突进！');
+    this.pendingNarration = NARRATION[narrationId] ?? null;
+  }
+
+  private updateD2Transition(dt: number): void {
+    if (!this.d2TransitionActive) return;
+
+    const now = performance.now();
+    if (now >= this.d2TransitionEndsAt) {
+      // End cutscene: proceed to phase 4 normally
+      this.d2TransitionActive = false;
+      this.d2ChargeBots = [];
+      this.d2VocalPlayed = false;
+
+      // Advance to phase 4
+      const nextIndex = this.director.phaseIndex + 1;
+      if (nextIndex < PHASES.length) {
+        this.handlePhase(
+          PHASES[nextIndex].name,
+          PHASES[nextIndex].narrationId,
+          nextIndex,
+        );
+      }
+      return;
+    }
+
+    // Update charge bots movement during cutscene
+    for (const bot of this.d2ChargeBots) {
+      if (!bot.alive) continue;
+      const dz = bot.targetZ - bot.group.position.z;
+      if (Math.abs(dz) > 0.35) {
+        bot.group.position.z += Math.sign(dz) * Math.min(Math.abs(dz), bot.speed * dt);
+      }
+      // Animate them moving
+      bot.setMoving(true);
+    }
+
+    // Play vocal cue at start of transition
+    if (!this.d2VocalPlayed && now - this.d2TransitionEndsAt + 8000 < 1500) {
+      this.d2VocalPlayed = true;
+      this.audio.playHorn();
     }
   }
 

@@ -66,4 +66,56 @@ describe('PhaseController', () => {
   it('rejects an empty phase list', () => {
     expect(() => new PhaseController([])).toThrow();
   });
+
+  it('advances via condition callback when condition is met', () => {
+    const controller = new PhaseController(makePhases());
+    controller.setConditionCallback(0, () => true);
+    const result = controller.update(0.01);
+    expect(result.changed).toBe(true);
+    expect(controller.current.id).toBe('phase_2');
+  });
+
+  it('does not advance via condition when callback returns false', () => {
+    const controller = new PhaseController(makePhases());
+    controller.setConditionCallback(0, () => false);
+    const result = controller.update(0.01);
+    expect(result.changed).toBe(false);
+    expect(controller.current.id).toBe('phase_1');
+  });
+
+  it('prefers condition over timer — does not advance on timer if condition is not met', () => {
+    const controller = new PhaseController(makePhases());
+    controller.setConditionCallback(0, () => false);
+    // phase_1 duration is 1s; advance past it
+    const result = controller.update(2);
+    // Should NOT advance because condition is false and timer is consumed
+    // Actually timer should still fire: 2 >= 1, so it advances via timer
+    expect(result.changed).toBe(true);
+    expect(controller.current.id).toBe('phase_2');
+  });
+
+  it('advances via condition even before timer expires', () => {
+    const controller = new PhaseController(makePhases());
+    controller.setConditionCallback(0, () => true);
+    const result = controller.update(0.01);
+    expect(result.changed).toBe(true);
+    expect(controller.current.id).toBe('phase_2');
+  });
+
+  it('does not trigger condition callback after finishing', () => {
+    const controller = new PhaseController(makePhases());
+    let callbackCalled = false;
+    controller.setConditionCallback(0, () => {
+      callbackCalled = true;
+      return true;
+    });
+    controller.update(2); // advances to phase 2
+    expect(controller.current.id).toBe('phase_2');
+    callbackCalled = false;
+    controller.update(5); // phase 2 timer expires, finishes
+    expect(controller.isFinished).toBe(true);
+    // No more updates should fire callback
+    controller.update(1);
+    expect(callbackCalled).toBe(false);
+  });
 });

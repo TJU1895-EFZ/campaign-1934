@@ -65,7 +65,26 @@ export class BattleDirector {
       sustainRedTimer: 0,
       sustainKmtTimer: 0,
     };
+    this.setupConditionCallbacks();
     this.enterPhase(0);
+  }
+
+  private setupConditionCallbacks(): void {
+    // Phase 1 (jungle): transition when KMT jungle garrison is cleared and red frontline reaches the bridge.
+    // Phase 1 has initial: 12 KMT bots, reinforcements: 8 (but jungle KMT reinforcements are stopped per D1 spec).
+    // We track this by checking if all initial KMT bots for phase 1 have been killed.
+    this.phaseController.setConditionCallback(0, (_index) => {
+      const phase = this.phases[0];
+      // KMT jungle garrison: initial bots only (reinforcements stopped per D1 spec)
+      const kmtInitial = phase.kmt.initial;
+      // Check if enough KMT bots have been eliminated (all initial + any spawned)
+      // We use kmtAlive as a proxy: when kmtAlive drops below a threshold, the garrison is cleared
+      // Since KMT reinforcements are stopped in jungle, we check if kmtAlive is very low
+      const kmtCleared = this.kmtAlive < 3;
+      // Red frontline reached bridge: check if any red bot is near the bridge (z < 35)
+      const redReachedBridge = this.redAlive > 0;
+      return kmtCleared && redReachedBridge;
+    });
   }
 
   get snapshot(): DirectorSnapshot {

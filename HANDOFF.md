@@ -9,7 +9,7 @@
 
 第一版（V1）已经完成并通过本地验证，不是半成品。后续工作只涉及修 bug、内容审核和本文第 7 节列出的 V1 范围外需求，不需要从零继续开发。
 
-**V1.1 迭代的技术路线已从 Three.js 切换为 Unity WebGL，视觉目标为照片级真实。** 详见 `docs/迭代需求-V1.1.md`。
+**V1.1 迭代方向已作废，项目继续以 V1 Three.js 为技术路线。** `docs/迭代需求-V1.1.md` 已归档，不再作为开发依据。
 
 ## 2. 已验证的基线
 
@@ -30,6 +30,7 @@
 2. **参考素材已在仓库里。** 项目方提供的参考视频和图片已迁移至 `public/assets/reference/`（含视觉参考图与飞夺泸定桥影视资料），已提交到仓库。接手方 fork/clone 即可获取，不需要额外拷贝。这些素材仅用于视觉参考，不参与构建。
 3. **不要拷贝 `node_modules/`、`dist/`、`test-results/`。** 它们都可重新生成；跨操作系统拷贝 `node_modules` 可能因原生二进制不兼容而失败。
 4. **对外措辞不要使用"游戏"一词**，统一用"应用 / 体验 / 战役模拟"等表述。README 与素材授权清单中的旧表述已清理。
+5. **V1.1 迭代方向已作废**，项目继续以 V1 Three.js 为技术路线。`docs/迭代需求-V1.1.md` 和 `docs/开场提示词-V1.1.md` 已归档，不再作为开发依据。
 
 ## 4. 新设备启动（V1 开发）
 
@@ -45,15 +46,9 @@ npm run test:e2e  # 端到端测试；首次需先 npx playwright install chromi
 
 端到端测试使用 SwiftShader 软件渲染，其中的 FPS 数字不代表真实硬件表现。
 
-## 4.5 新设备启动（V1.1 Unity 开发）
+## 4.5 后续迭代
 
-详见 `docs/迭代需求-V1.1.md` §1.3。简要步骤：
-
-1. 安装 Unity Hub → Unity 2022.3 LTS（勾选 WebGL build support + C# support）→ Visual Studio 2022（Unity 游戏开发工作负载）
-2. 创建 3D (URP) 项目，安装 `com.unity.inputsystem`、`com.unity.test-framework`、`com.unity.addressables`
-3. 将 `src/battle/core/` 的 TypeScript 战斗逻辑移植为 C#（放在 `Scripts/Core/`）
-4. 重写渲染层（场景、士兵、环境、后处理）为 Unity URP
-5. 构建 WebGL 输出到 `Build/WebGL/`，用 HTML 壳页面包装（保留原 `src/app/` 的导航逻辑）
+V1.1 迭代方向已作废，项目继续以 V1 Three.js 为技术路线。后续迭代计划以项目实际决策为准。
 
 ## 5. 代码地图（V1）
 
@@ -67,29 +62,18 @@ npm run test:e2e  # 端到端测试；首次需先 npx playwright install chromi
 | `src/styles/` | 设计变量与页面样式 |
 | `tests/e2e/navigation.spec.ts` | 端到端测试 |
 | `scripts/` | 截图、录制、检查、性能测量等调试脚本 |
-| `public/assets/` | CC0 纹理、枪声采样、V1.1 音频/视频素材、视觉参考素材（详见 `public/assets/README.md`） |
-| `docs/ASSET_LICENSES.md` | 外部素材来源与授权（V1 CC0 / V1.1 MIT） |
+| `public/assets/` | CC0 纹理、枪声采样、视觉参考素材（详见 `public/assets/README.md`） |
+| `docs/ASSET_LICENSES.md` | 外部素材来源与授权（V1 CC0） |
 
 架构约定：战斗规则放在 `core/`，与渲染解耦；`three/` 和 `runtime/` 只负责表现与输入输出。新增规则优先写纯函数并补单元测试。
 
-## 5.5 代码地图（V1.1 Unity 目标结构）
+## 5.5 后续迭代规划
 
-| 路径 | 职责 |
-| --- | --- |
-| `Scripts/Core/` | 移植自 `src/battle/core/` 的 C# 战斗逻辑（导演、阶段、伤害、统计、测试） |
-| `Scripts/Runtime/` | 玩家控制、武器、人机 AI、HUD、音频管理、字幕、弹道 |
-| `Scripts/Rendering/` | 场景搭建、士兵外观、程序化材质、后处理、视频投影 |
-| `Scripts/UI/` | 导读页、总览页、战斗 HUD、暂停菜单、知识问答、结算 |
-| `Scripts/Content/` | 文案与配置（从 TypeScript JSON 转换为 Unity Addressable 资源） |
-| `Assets/Resources/audio/` | 音频素材 |
-| `Assets/Resources/video/` | 视频素材 |
-| `Assets/Resources/models/` | 3D 模型素材（GLB） |
-| `Build/WebGL/` | Unity WebGL 构建产物 |
-| `Index.html` | HTML 壳页面（承载原 `src/app/` 的导航逻辑，Unity 作为 canvas 嵌入） |
+V1.1 迭代方向已作废，项目继续以 V1 Three.js 为技术路线。后续迭代规划以项目实际决策为准。
 
 ## 6. 文档怎么读
 
-- **`docs/迭代需求-V1.1.md`**：V1 之后的迭代开工指令（技术栈切换为 Unity WebGL，照片级真实视觉）。**可直接交给接手方作为开工指令。**
+- **`docs/迭代需求-V1.1.md`**：**已作废**，V1.1 Unity 迭代方向已取消，不再作为开发依据。
 - **`README.md`**：对外说明、操作方式、构建部署、已完成范围，是"当前做到哪"的最准确来源。
 - **`PRD.md`**：需求与验收标准的权威来源（FR、AC、文案附录）。
 - **`docs/archive/DEV_PLAN.md`**：**历史文档，已归档，勿作为现状依据。** 仅用于追溯最初的技术选型与阶段计划。其中的语音播报方案、"不加入跳跃"、伤害 10 点等描述均已废弃。
@@ -110,7 +94,7 @@ V1 明确不做、可作为后续需求（来自 PRD §8.2 / 归档 `docs/archiv
 - 其他兵种
 - 存档、排行榜、成就、统计后台
 - 真人配音、多语言
-- 写实模型、动作捕捉、复杂过场（V1.1 F 组正在做）
+- 写实模型、动作捕捉、复杂过场（后续需求，待定）
 - 成长、装备、经济系统
 - 多人观战、直播、社交分享
 
@@ -118,10 +102,10 @@ V1 明确不做、可作为后续需求（来自 PRD §8.2 / 归档 `docs/archiv
 
 1. 每局必须以红军夺桥成功结束，不存在失败结局。
 2. 玩家的表现只影响个人数据和局部战斗，不影响最终胜负。
-3. 同场人机 15–20 名（V1.1 写实路线），红军约 10–14 名，国民党军约 5–8 名。
+3. 同场人机 30–40 名，红军约 20–28 名，国民党军约 12–16 名。
 4. 单人、桌面浏览器、键盘鼠标、无后端。
 5. 第一版只有飞夺泸定桥一场可进入的战斗。
-6. 外部素材：V1 使用 CC0 授权，登记到 `docs/ASSET_LICENSES.md`；V1.1 改用 MIT 授权（兼容 Apache 2.0）。`public/assets/reference/` 已提交到仓库，`art-local-ref/` 仅本机参考。
+6. 外部素材：V1 使用 CC0 授权，登记到 `docs/ASSET_LICENSES.md`。`public/assets/reference/` 已提交到仓库，`art-local-ref/` 仅本机参考。
 7. 对外文案避免使用"游戏"一词。
 
 ## 9. 部署
@@ -134,15 +118,9 @@ V1 明确不做、可作为后续需求（来自 PRD §8.2 / 归档 `docs/archiv
 
 ### V1.1（Unity WebGL）
 
-Unity WebGL 构建产物在 `Build/WebGL/`，包含 `index.html` 壳 + `.data` + `.wasm` + `.mem` 文件。部署方式：
+> **已作废**：V1.1 Unity 迭代方向已取消，本节保留仅作为历史记录。
 
-1. 将 `Build/WebGL/` 整目录内容推送到 `main` 分支（或单独部署分支）
-2. GitHub Pages Settings → Build and deployment → Source 设为 **GitHub Actions**（或 **Deploy from a branch**）
-3. 若使用 GitHub Actions，需在仓库根目录添加 `.github/workflows/unity-deploy.yml`，步骤为：Unity 编辑器 CI（`game-ci/unity-builder`）→ 构建 WebGL → 发布到 GitHub Pages
-
-## 10. 已知事项
-
-- V1 生产构建会提示主 JS chunk 约 677 kB（gzip 175 kB），V1 可接受；Unity WebGL 构建体积更大（通常 50–150 MB 压缩后），建议启用 gzip + brotli 压缩。
-- 不保存战斗进度；刷新页面回到导读页。音量与字幕设置保存在 `localStorage`（键名 `campaign1934.settings.v1`），V1.1 Unity 中对应 `PlayerPrefs`。
+- 不保存战斗进度；刷新页面回到导读页。音量与字幕设置保存在 `localStorage`（键名 `campaign1934.settings.v1`）。
+- V1.1 迭代方向已作废，项目继续以 V1 Three.js 为技术路线。`docs/迭代需求-V1.1.md` 和 `docs/开场提示词-V1.1.md` 已归档，不再作为开发依据。
 - 端到端测试会自动启动 `http://127.0.0.1:4173` 的开发服务器；若该端口已有服务，会复用。
 - `scripts/` 下的脚本用于人工排查和性能测量，不属于正式测试流程。

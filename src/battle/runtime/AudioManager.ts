@@ -4,11 +4,14 @@ export class AudioManager {
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
   private sfxBus: GainNode | null = null;
+  private weaponBus: GainNode | null = null;
   private ambienceBus: GainNode | null = null;
   private noiseBuffer: AudioBuffer | null = null;
   private ambienceSources: AudioBufferSourceNode[] = [];
   private ambienceOscillators: OscillatorNode[] = [];
   private gunshotBuffer: AudioBuffer | null = null;
+  private battleBgBuffer: AudioBuffer | null = null;
+  private battleBgSource: AudioBufferSourceNode | null = null;
   private distantTimer: number | null = null;
   private settings: Settings;
 
@@ -32,10 +35,15 @@ export class AudioManager {
   }
 
   playRifle(): void {
-    if (!this.context || !this.sfxBus) return;
-    this.noiseBurst(0.13, 1800, 0.55, 0, 'lowpass');
-    this.noiseBurst(0.04, 4200, 0.16, 0, 'highpass');
-    this.thump(115, 48, 0.14, 0.18);
+    if (!this.context || !this.weaponBus) return;
+    // Primary crack: broadband noise through a lowpass, slightly louder.
+    this.noiseBurstOn(0.14, 2200, 0.6, 0, 'lowpass', 0, this.weaponBus);
+    // Sharp transient at the muzzle: high-frequency burst.
+    this.noiseBurstOn(0.035, 5500, 0.18, 0, 'highpass', 0, this.weaponBus);
+    // Body thump: low oscillator punch.
+    this.thumpOn(120, 50, 0.06, 0.22, 0, 0, this.weaponBus);
+    // Sub-bass slam for close-range impact.
+    this.thumpOn(65, 30, 0.1, 0.12, 0, 0.005, this.weaponBus);
   }
 
   playDistantShot(pan = 0): void {
@@ -149,6 +157,15 @@ export class AudioManager {
       source.disconnect();
     }
     this.ambienceSources = [];
+    if (this.battleBgSource) {
+      try {
+        this.battleBgSource.stop();
+      } catch {
+        // Already stopped.
+      }
+      this.battleBgSource.disconnect();
+      this.battleBgSource = null;
+    }
     for (const oscillator of this.ambienceOscillators) {
       try {
         oscillator.stop();
@@ -164,9 +181,11 @@ export class AudioManager {
     }
     this.master = null;
     this.sfxBus = null;
+    this.weaponBus = null;
     this.ambienceBus = null;
     this.noiseBuffer = null;
     this.gunshotBuffer = null;
+    this.battleBgBuffer = null;
   }
 
   private createContext(): void {
@@ -181,16 +200,20 @@ export class AudioManager {
       master.connect(context.destination);
       const sfx = context.createGain();
       sfx.connect(master);
+      const weapon = context.createGain();
+      weapon.connect(sfx);
       const ambience = context.createGain();
       ambience.connect(master);
 
       this.context = context;
       this.master = master;
       this.sfxBus = sfx;
+      this.weaponBus = weapon;
       this.ambienceBus = ambience;
       this.noiseBuffer = this.createNoiseBuffer(context);
       this.applyVolumes();
       void this.loadGunshotSample(context);
+      void this.loadBattleBgSample(context);
       this.startAmbience();
     } catch {
       this.context = null;
@@ -287,6 +310,35 @@ export class AudioManager {
     }
   }
 
+  private async loadBattleBgSample(context: AudioContext): Promise<void> {
+    try {
+      const response = await fetch(`${import.meta.env.BASE_URL}assets/audio/battle background noise.mp3`);
+      if (!response.ok) return;
+      const data = await response.arrayBuffer();
+      const buffer = await context.decodeAudioData(data);
+      if (this.context === context) {
+        this.battleBgBuffer = buffer;
+        this.startBattleBg(buffer);
+      }
+    } catch {
+      // No battle background audio available; rely on procedural ambience.
+    }
+  }
+
+  private startBattleBg(buffer: AudioBuffer): void {
+    const ctx = this.context;
+    if (!ctx || !this.ambienceBus || this.battleBgSource) return;
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    const gain = ctx.createGain();
+    gain.gain.value = 0.35;
+    source.connect(gain).connect(this.ambienceBus);
+    source.start();
+    this.battleBgSource = source;
+  }
+
   private playGunshotSample(pan: number, volume: number, delay = 0): boolean {
     const ctx = this.context;
     if (!ctx || !this.gunshotBuffer || !this.sfxBus) return false;
@@ -316,8 +368,21 @@ export class AudioManager {
     filterType: BiquadFilterType = 'lowpass',
     delay = 0,
   ): void {
+    if (!this.sfxBus) return;
+    this.noiseBurstOn(duration, cutoff, volume, pan, filterType, delay, this.sfxBus);
+  }
+
+  private noiseBurstOn(
+    duration: number,
+    cutoff: number,
+    volume: number,
+    pan: number,
+    filterType: BiquadFilterType,
+    delay: number,
+    target: GainNode,
+  ): void {
     const ctx = this.context;
-    if (!ctx || !this.noiseBuffer || !this.sfxBus) return;
+    if (!ctx || !this.noiseBuffer) return;
     const now = ctx.currentTime + delay;
     const source = ctx.createBufferSource();
     source.buffer = this.noiseBuffer;
@@ -330,7 +395,7 @@ export class AudioManager {
     gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
     const panner = ctx.createStereoPanner();
     panner.pan.value = Math.max(-1, Math.min(1, pan));
-    source.connect(filter).connect(gain).connect(panner).connect(this.sfxBus);
+    source.connect(filter).connect(gain).connect(panner).connect(target);
     source.start(now);
     source.stop(now + duration + 0.02);
   }
@@ -343,8 +408,21 @@ export class AudioManager {
     pan = 0,
     delay = 0,
   ): void {
+    if (!this.sfxBus) return;
+    this.thumpOn(startFrequency, endFrequency, duration, volume, pan, delay, this.sfxBus);
+  }
+
+  private thumpOn(
+    startFrequency: number,
+    endFrequency: number,
+    duration: number,
+    volume: number,
+    pan: number,
+    delay: number,
+    target: GainNode,
+  ): void {
     const ctx = this.context;
-    if (!ctx || !this.sfxBus) return;
+    if (!ctx) return;
     const now = ctx.currentTime + delay;
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -355,7 +433,7 @@ export class AudioManager {
     gain.gain.setValueAtTime(volume, now);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
     panner.pan.value = Math.max(-1, Math.min(1, pan));
-    oscillator.connect(gain).connect(panner).connect(this.sfxBus);
+    oscillator.connect(gain).connect(panner).connect(target);
     oscillator.start(now);
     oscillator.stop(now + duration + 0.02);
   }

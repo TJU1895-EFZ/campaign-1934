@@ -15,12 +15,15 @@ export interface SoldierAssets {
   dispose(): void;
 }
 
+export type SoldierPosture = 'stand' | 'crouch' | 'prone';
+
 export interface SoldierView {
   group: THREE.Group;
   upper: THREE.Mesh;
   leftLeg: THREE.Mesh;
   rightLeg: THREE.Mesh;
   setMoving: (moving: boolean) => void;
+  setPosture: (posture: SoldierPosture) => void;
   update: (dt: number) => void;
   reset: () => void;
 }
@@ -112,6 +115,11 @@ export function createSoldier(
 
   let moving = false;
   let phase = 0;
+  let posture: SoldierPosture = 'stand';
+
+  // Posture offsets: how much to lower the group Y and tilt upper body X.
+  const postureY: Record<SoldierPosture, number> = { stand: 0, crouch: -0.22, prone: -0.48 };
+  const postureTilt: Record<SoldierPosture, number> = { stand: 0, crouch: 0.18, prone: 0.55 };
 
   const view: SoldierView = {
     group,
@@ -120,6 +128,9 @@ export function createSoldier(
     rightLeg,
     setMoving(next) {
       moving = next;
+    },
+    setPosture(next) {
+      posture = next;
     },
     update(dt) {
       if (moving) {
@@ -131,14 +142,22 @@ export function createSoldier(
       rightLeg.rotation.x = THREE.MathUtils.lerp(rightLeg.rotation.x, -swing, damp);
       upper.position.y = moving ? Math.abs(Math.sin(phase)) * 0.022 : 0;
       upper.rotation.x = moving ? Math.sin(phase * 2) * 0.012 : 0;
+
+      // Apply posture offsets on top of animation.
+      const targetY = postureY[posture];
+      const targetTilt = postureTilt[posture];
+      group.position.y = THREE.MathUtils.lerp(group.position.y, targetY, damp);
+      upper.rotation.x += THREE.MathUtils.lerp(0, targetTilt, damp) - upper.rotation.x * (1 - damp) * 0.3;
     },
     reset() {
       moving = false;
+      posture = 'stand';
       phase = 0;
       leftLeg.rotation.x = 0;
       rightLeg.rotation.x = 0;
       upper.position.y = 0;
       upper.rotation.x = 0;
+      group.position.y = 0;
     },
   };
 
