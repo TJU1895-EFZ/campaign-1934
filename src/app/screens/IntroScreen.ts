@@ -1,5 +1,6 @@
 import type { Screen } from '../Screen';
 import { INTRO } from '../../content/intro';
+import { shellAudio } from '../../audio/ShellAudio';
 
 interface IntroScreenOptions {
   onNext: () => void;
@@ -42,6 +43,7 @@ export class IntroScreen implements Screen {
               <span class="btn-arrow" aria-hidden="true">→</span>
             </button>
             <p class="intro-hint">建议使用电脑浏览器，配合键盘与鼠标体验。</p>
+            <button type="button" class="btn btn-ghost audio-toggle" data-testid="audio-toggle" aria-pressed="${shellAudio.isMuted()}">${shellAudio.isMuted() ? '恢复声音' : '静音'}</button>
           </div>
           <footer class="intro-footer">
             <span>1934 — 1936</span>
@@ -54,15 +56,24 @@ export class IntroScreen implements Screen {
 
     const nextButton = root.querySelector<HTMLButtonElement>('[data-testid="intro-next"]');
     nextButton?.addEventListener('click', this.handleNext);
+    root.querySelector('[data-testid="audio-toggle"]')?.addEventListener('click', this.handleAudioToggle);
   }
 
   destroy(): void {
     const nextButton = this.root?.querySelector<HTMLButtonElement>('[data-testid="intro-next"]');
     nextButton?.removeEventListener('click', this.handleNext);
+    this.root?.querySelector('[data-testid="audio-toggle"]')?.removeEventListener('click', this.handleAudioToggle);
     this.root = null;
   }
 
   private handleNext = (): void => {
     this.options.onNext();
+  };
+
+  private handleAudioToggle = (event: Event): void => {
+    const button = event.currentTarget as HTMLButtonElement;
+    const muted = shellAudio.toggleMute();
+    button.textContent = muted ? '恢复声音' : '静音';
+    button.setAttribute('aria-pressed', String(muted));
   };
 }

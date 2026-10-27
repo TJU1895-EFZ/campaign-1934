@@ -1,0 +1,32 @@
+{
+  "name": "soldier_red",
+  "seed": 1934,
+  "gender": 1,
+  "age": 0.53,
+  "muscle": 0.62,
+  "weight": 0.45,
+  "height": 0.48,
+  "african": 0.02,
+  "asian": 0.93,
+  "caucasian": 0.05,
+  "hair": "buzz",
+  "facialHair": "none",
+  "outfit": "none",
+  "top": "fatigue_shirt",
+  "bottom": "fatigue_pants",
+  "shoes": "combat_boots",
+  "accessories": ["belt"],
+  "garmentStyles": {
+    "fatigue_shirt": { "pattern": "solid", "color": "#59666b" },
+    "fatigue_pants": { "pattern": "solid", "color": "#4d595e" },
+    "belt": { "pattern": "solid", "color": "#4b3424" }
+  },
+  "detail": "low",
+  "rig": "game",
+  "restPose": "T",
+  "animations": true,
+  "weapon": "rifle",
+  "faceBones": false,
+  "faceShapes": false,
+  "speechShapes": false
+}

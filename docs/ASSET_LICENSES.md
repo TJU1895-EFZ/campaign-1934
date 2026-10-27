@@ -2,6 +2,19 @@
 
 本文件记录 Campaign 1934 第一版使用的视觉、音频、字体和文本素材来源。
 
+## V1.1 Unity WebGL 补充
+
+| 类别 | Unity 路径 | 来源 | 授权/说明 |
+| --- | --- | --- | --- |
+| PBR 纹理 | `Assets/Resources/Textures/` | 下表 Poly Haven 素材的项目内副本 | CC0 1.0 |
+| 远处枪声 | `Assets/StreamingAssets/Audio/guns.mp3` | OpenGameArt，见 1.2 | CC0 1.0 |
+| BGM、号角 | `Assets/StreamingAssets/Audio/` | `public/assets/` 中项目方提供素材 | 项目方提供；发布权由项目方确认 |
+| 场景投影视频 | `Assets/StreamingAssets/Video/vid_*.mp4` | `public/assets/` 中项目方提供的战役视频剪辑 | 项目方提供；三个阶段使用独立片段 |
+| 红军/守军士兵 | `Assets/Resources/Models/soldier_*.fbx` | Ara 3D Gen `0c3473d7d46a2badcdcd1dcfd4aeb0762eb04b20` 本地生成 | 导出模型按 MIT 分发；生成器 MIT；底层 MakeHuman 数据 CC0；参数与许可证随模型保存 |
+| 建筑与环境 | Unity Primitive + 项目 C# 代码生成 | 本项目原创几何 + Poly Haven PBR 纹理 | 代码随项目 Apache-2.0；纹理 CC0 1.0 |
+
+士兵并非下载的商业模型包，而是用 MIT 许可的生成器和 CC0 人体数据按项目参考图参数化生成。精确生成参数、生成器提交号和两份许可证位于 `Assets/Resources/Models/Source/`，因此可以复现和审计。
+
 ## 1. 自有/程序化素材
 
 | 类别 | 素材 | 来源 | 授权/说明 |

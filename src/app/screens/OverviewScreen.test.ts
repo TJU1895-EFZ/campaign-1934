@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { OverviewScreen } from './OverviewScreen';
+import { shellAudio } from '../../audio/ShellAudio';
 
 describe('OverviewScreen', () => {
   beforeEach(() => {
@@ -21,6 +22,17 @@ describe('OverviewScreen', () => {
     expect(root.querySelectorAll('[data-battle-id]')).toHaveLength(6);
     expect(root.textContent).toContain('飞夺泸定桥');
     expect(root.textContent).toContain('血战湘江');
+    screen.destroy();
+  });
+
+  it('uses distinct hover feedback for playable and locked cards', () => {
+    const hover = vi.spyOn(shellAudio, 'playCardHover').mockImplementation(() => undefined);
+    const { root, screen } = mountScreen();
+    root.querySelector<HTMLButtonElement>('[data-testid="battle-card-luding"]')!.focus();
+    root.querySelector<HTMLButtonElement>('[data-testid="battle-card-xiangjiang"]')!.focus();
+    expect(hover).toHaveBeenNthCalledWith(1, true);
+    expect(hover).toHaveBeenNthCalledWith(2, false);
+    hover.mockRestore();
     screen.destroy();
   });
 

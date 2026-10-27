@@ -34,3 +34,22 @@ export function artilleryShellHeight(
   const remaining = 1 - progress;
   return targetHeight + ARTILLERY_SHELL_START_HEIGHT * remaining * remaining;
 }
+
+export function artilleryShellPosition(
+  targetX: number,
+  targetZ: number,
+  targetHeight: number,
+  elapsedSeconds: number,
+  flightSeconds = ARTILLERY_SHELL_FLIGHT_SECONDS,
+): { x: number; y: number; z: number } {
+  const progress = Math.min(1, Math.max(0, elapsedSeconds / Math.max(0.001, flightSeconds)));
+  const y = artilleryShellHeight(targetHeight, elapsedSeconds, flightSeconds);
+  // Arc from the KMT side (positive Z, far bank) down to the target
+  const startX = targetX + (Math.random() - 0.5) * 4;
+  const startZ = targetZ + 18 + Math.random() * 12; // 18–30 meters behind target, from KMT direction
+  return {
+    x: startX + (targetX - startX) * progress,
+    y,
+    z: startZ + (targetZ - startZ) * progress,
+  };
+}

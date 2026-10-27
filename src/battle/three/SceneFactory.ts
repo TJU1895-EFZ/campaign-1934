@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {
   ARTILLERY_SHELL_FLIGHT_SECONDS,
   artilleryShellHeight,
+  artilleryShellPosition,
 } from '../core/artillery';
 import { convoyPositionZ, hasConvoyExited } from '../core/cinematics';
 import { MACHINE_GUN_COUNT } from '../core/machineGun';
@@ -1055,6 +1056,7 @@ export function createBattleScene(host: HTMLElement): BattleScene {
     target: THREE.Vector3;
     elapsed: number;
     onImpact: () => void;
+    startPos: THREE.Vector3;
   }> = [];
 
   const spawnArtilleryStrike = (position: THREE.Vector3): void => {
@@ -1099,8 +1101,6 @@ export function createBattleScene(host: HTMLElement): BattleScene {
   const launchArtilleryStrike = (position: THREE.Vector3, onImpact: () => void): void => {
     const target = position.clone();
     const shell = new THREE.Mesh(artilleryShellGeometry, artilleryShellMaterial);
-    shell.position.copy(target);
-    shell.position.y = artilleryShellHeight(target.y, 0);
     scene.add(shell);
 
     const trailMaterial = track(
@@ -1114,11 +1114,13 @@ export function createBattleScene(host: HTMLElement): BattleScene {
       }),
     );
     const trail = new THREE.Sprite(trailMaterial);
-    trail.position.copy(shell.position);
-    trail.position.y += 0.7;
-    trail.scale.set(0.7, 2.4, 1);
     scene.add(trail);
-    artilleryShells.push({ shell, trail, target, elapsed: 0, onImpact });
+
+    const pos = artilleryShellPosition(target.x, target.z, target.y, 0);
+    shell.position.set(pos.x, pos.y, pos.z);
+    trail.position.set(pos.x, pos.y + 0.7, pos.z);
+
+    artilleryShells.push({ shell, trail, target, elapsed: 0, onImpact, startPos: shell.position.clone() });
   };
 
   const getActiveArtilleryShellCount = (): number => artilleryShells.length;

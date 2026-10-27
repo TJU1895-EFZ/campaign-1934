@@ -9,28 +9,7 @@ import { ResultScreen } from './screens/ResultScreen';
 import { ErrorScreen } from './screens/ErrorScreen';
 import type { QuizResult } from '../content/quiz';
 import { loadSettings, saveSettings, type Settings } from '../utils/storage';
-
-/** Lightweight UI sound helper — no WebAudio context needed. */
-function playUiTone(frequency: number, duration: number, volume: number): void {
-  try {
-    const Ctor =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!Ctor) return;
-    const ctx = new Ctor();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = frequency;
-    gain.gain.setValueAtTime(volume, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + duration + 0.02);
-  } catch {
-    // Audio unavailable — silently degrade.
-  }
-}
+import { shellAudio } from '../audio/ShellAudio';
 
 /**
  * AppAudio — procedural BGM for intro/overview screens.
@@ -188,6 +167,7 @@ export class App {
   }
 
   showIntro(): void {
+    shellAudio.enterShell();
     this.setScreen(
       'intro',
       new IntroScreen({
@@ -199,6 +179,7 @@ export class App {
   }
 
   showOverview(): void {
+    shellAudio.enterShell();
     this.setScreen(
       'overview',
       new OverviewScreen({
@@ -206,13 +187,6 @@ export class App {
           if (battleId === 'luding') this.startBattle();
         },
         onBack: () => this.showIntro(),
-        onHoverSound: (locked) => {
-          if (locked) {
-            playUiTone(160, 0.15, 0.04);
-          } else {
-            playUiTone(680, 0.12, 0.03);
-          }
-        },
       }),
     );
     this.appAudio.setVolume(this.settings.sfxVolume);
@@ -220,6 +194,7 @@ export class App {
   }
 
   startBattle(): void {
+    shellAudio.leaveShell();
     this.quizResult = null;
     this.summary = null;
     this.stopMenuBgm();
