@@ -1,19 +1,20 @@
 # 素材与授权说明
 
-本文件记录 Campaign 1934 第一版使用的视觉、音频、字体和文本素材来源。
+本文件记录 Campaign 1934 第一版（Three.js WebGL）使用的视觉、音频、字体和文本素材来源。
 
-## V1.1 Unity WebGL 补充
+## 0. 项目方提供素材
 
-| 类别 | Unity 路径 | 来源 | 授权/说明 |
+| 类别 | 文件 | 使用情况 | 授权/说明 |
 | --- | --- | --- | --- |
-| PBR 纹理 | `Assets/Resources/Textures/` | 下表 Poly Haven 素材的项目内副本 | CC0 1.0 |
-| 远处枪声 | `Assets/StreamingAssets/Audio/guns.mp3` | OpenGameArt，见 1.2 | CC0 1.0 |
-| BGM、号角 | `Assets/StreamingAssets/Audio/` | `public/assets/` 中项目方提供素材 | 项目方提供；发布权由项目方确认 |
-| 场景投影视频 | `Assets/StreamingAssets/Video/vid_*.mp4` | `public/assets/` 中项目方提供的战役视频剪辑 | 项目方提供；三个阶段使用独立片段 |
-| 红军/守军士兵 | `Assets/Resources/Models/soldier_*.fbx` | Ara 3D Gen `0c3473d7d46a2badcdcd1dcfd4aeb0762eb04b20` 本地生成 | 导出模型按 MIT 分发；生成器 MIT；底层 MakeHuman 数据 CC0；参数与许可证随模型保存 |
-| 建筑与环境 | Unity Primitive + 项目 C# 代码生成 | 本项目原创几何 + Poly Haven PBR 纹理 | 代码随项目 Apache-2.0；纹理 CC0 1.0 |
+| 战斗背景音乐 | `public/assets/audio/battle_bgm.mp3` | 战斗开始循环播放，夺桥成功后停止 | 项目方 2026-10-27 提供；发布权由项目方确认 |
+| 战场环境底噪 | `public/assets/audio/battle background noise.mp3` | 战斗环境声循环 | 项目方提供；发布权由项目方确认 |
+| 号角素材 | `public/assets/audio/sfx_horn.mp3` | 当前未接入 | 项目方提供；发布权由项目方确认 |
+| 备用背景音乐 | `public/assets/audio/bgm_battle.mp3` | 当前未接入 | 项目方提供；发布权由项目方确认 |
+| 场景视频 | `public/assets/video/vid_jungle_board.mp4`、`vid_bunker_wall.mp4` | 当前未在场景中播放 | 项目方提供；发布权由项目方确认 |
+| 视觉参考图 | `public/assets/reference/*.png`、`*.jpeg` | 仅美术参考，不参与构建 | 项目方提供 |
+| 影视资料 | `public/assets/reference/ref_battle_videos/*.mp4` | 仅制作参考，不参与构建 | 项目方提供；公开播放前须确认发布权 |
 
-士兵并非下载的商业模型包，而是用 MIT 许可的生成器和 CC0 人体数据按项目参考图参数化生成。精确生成参数、生成器提交号和两份许可证位于 `Assets/Resources/Models/Source/`，因此可以复现和审计。
+士兵、场景与 UI 不使用外部 3D 模型；所有人物和场景几何均由项目代码程序化生成。
 
 ## 1. 自有/程序化素材
 
@@ -22,7 +23,7 @@
 | 3D 场景 | 铁索桥、桥头堡、山体、河流、沙袋、机枪阵地、雨雾、火焰、烟雾 | 项目代码程序化生成（Three.js 几何、CanvasTexture、Sprite） | 本项目原创；木桥/岩石/铁索表面使用下方 Poly Haven CC0 纹理 |
 | 3D 士兵 | 红军/国民党军低多边形士兵、步枪 | 项目代码程序化生成（合并几何 + 顶点色） | 本项目原创，无外部模型 |
 | UI 图形 | 导读页山峦/铁索 SVG、卡片纹理、HUD、按钮、图标 | 项目代码与 CSS 生成 | 本项目原创 |
-| 音效 | 近距步枪、跳弹、爆炸、河水、脚步、风雨、远处炮火、UI、胜利和弦 | Web Audio API 分层实时合成 | 本项目原创 |
+| 音效 | 近距步枪、跳弹、爆炸、河水、脚步、风雨、远处炮火、号角、UI、胜利和弦 | Web Audio API 分层实时合成 | 本项目原创 |
 | 远处枪声采样 | 战场远处/断续枪声 | `public/assets/audio/guns.mp3`，来自 OpenGameArt | 外部 CC0 1.0 采样，见 1.2 |
 | 剧情文本 | 4 个阶段的文字剧情、结算结语 | `src/content/narration.ts`，来自 `PRD.md` 附录 A 初稿 | 本项目原创文本，仅以文字字幕呈现；公开发布前需完成历史内容审核 |
 | 导读/卡片/结算文本 | 长征介绍、战役卡片、结算文案 | `src/content/`、`PRD.md` 附录 B/C | 本项目原创文本；历史事实参考公开资料 |
@@ -72,11 +73,17 @@
 
 ## 4. 未使用的素材
 
-`art/` 下的参考视频和图片由项目方提供，仅在本地用于视觉参考，已加入 `.gitignore`，不随应用或仓库分发；应用内人物与环境由程序化几何和 CC0 纹理重建。
+`public/assets/reference/` 下的参考图片和影视资料由项目方提供，已提交到仓库，仅用于视觉参考，不参与构建和运行时加载。
+
+当前版本未接入以下项目方素材：
+
+- `public/assets/audio/sfx_horn.mp3`（号角由 Web Audio API 实时合成）
+- `public/assets/audio/bgm_battle.mp3`
+- `public/assets/video/vid_jungle_board.mp4`、`vid_bunker_wall.mp4`
 
 除 1.1 的 Poly Haven 纹理和 1.2 的 OpenGameArt 枪声采样外，第一版未使用：
 
-- 历史照片、影视剧照、纪录片截图；
+- 历史照片、影视剧照、纪录片截图作为运行时贴图；
 - 其他第三方 3D 模型、贴图、动作捕捉数据；
 - 其他第三方音乐、音效采样；
 - 商业中文字体文件。
@@ -86,7 +93,8 @@
 ## 5. 发布前检查清单
 
 - [ ] 文字剧情与历史文案完成内容审核。
-- [ ] 所有新增图片/音频/模型有明确授权记录。
+- [ ] 战斗背景音乐、参考影视资料的发布权由项目方确认。
+- [ ] 所有新增图片/音频/视频/模型有明确授权记录。
 - [ ] 字体授权文件随项目分发（如使用外部字体）。
 - [ ] 依赖许可证未被移除或修改。
 - [ ] 未使用来源不明的网络图片或音频。

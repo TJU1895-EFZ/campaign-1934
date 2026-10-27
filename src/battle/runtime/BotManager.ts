@@ -70,6 +70,8 @@ export class Bot {
   lastPositionZ = 0;
   lastPositionX = 0;
   stuckTimer = 0;
+  // Time left in which the bot is pinned against cover; suppresses the walk cycle.
+  blockedTimer = 0;
 
   // B2: posture tracking (visual only, no collision change)
   posture: SoldierPosture = 'stand';
@@ -126,6 +128,7 @@ export class Bot {
     this.lastPositionZ = position.z;
     this.lastPositionX = position.x;
     this.stuckTimer = 0;
+    this.blockedTimer = 0;
     this.posture = 'stand';
     this.postureTimer = 0;
     this.group.rotation.set(0, faction === 'red' ? Math.PI : 0, 0);
@@ -144,6 +147,12 @@ export class Bot {
 
   setMoving(moving: boolean): void {
     this.view.setMoving(moving);
+  }
+
+  /** Advance the walk cycle without running collision/movement logic. */
+  updateView(dt: number): void {
+    this.view.update(dt);
+    this.group.position.y = this.baseY;
   }
 
   setPhase(phaseIndex: number): void {
@@ -246,6 +255,9 @@ export class Bot {
 
   updateMovement(dt: number): void {
     if (!this.alive) return;
+    if (this.blockedTimer > 0) {
+      this.blockedTimer = Math.max(0, this.blockedTimer - dt);
+    }
 
     if (this.state === 'retreat') {
       this.view.setMoving(true);
@@ -302,7 +314,8 @@ export class Bot {
       );
     }
 
-    const moving = distance > 0.4 && this.state === 'advance';
+    const moving =
+      this.blockedTimer <= 0 && distance > 0.4 && this.state === 'advance';
     if (moving) {
       this.stuckTimer = 0;
       const actualDz = this.group.position.z - this.lastPositionZ;
@@ -575,6 +588,8 @@ export class BotManager {
         // B3: obstacle dodge — 50% crouch-hide, 50% stand-avoid
         bot.group.position.x = previousX;
         bot.group.position.z = previousZ;
+        // Pinned against cover: suppress the walk cycle until the path clears.
+        bot.blockedTimer = 0.2;
         if (bot.postureTimer <= 0 && bot.alive) {
           if (Math.random() < 0.5) {
             // Crouch behind cover for 0.8–1.5 seconds

@@ -113,6 +113,36 @@ describe('Bot falling', () => {
     manager.dispose();
   });
 
+  it('stops the walk cycle when a Red bot is pinned against cover', () => {
+    const scene = new THREE.Scene();
+    const manager = new BotManager({
+      scene,
+      colliders: [colliderFromCenter(0, 10, 40, 40, 3)],
+      onBotDowned: vi.fn(),
+    });
+    manager.spawnSquad('red', 1);
+    manager.setBattleZone('bridge');
+    manager.setPhase(1);
+
+    const bot = manager.getBots()[0];
+    bot.group.position.set(0, 8, 10);
+    bot.laneX = 0;
+    bot.targetZ = 30;
+    bot.state = 'advance';
+
+    const world = createWorld();
+    for (let i = 0; i < 60; i += 1) {
+      manager.update(0.1, world);
+    }
+
+    // Position is reverted, so the bot stands still instead of walking in place.
+    expect(bot.group.position.z).toBeCloseTo(10, 5);
+    expect(bot.blockedTimer).toBeGreaterThan(0);
+    expect(Math.abs(bot.hitMeshes[1].rotation.x)).toBeLessThan(0.05);
+    expect(Math.abs(bot.hitMeshes[2].rotation.x)).toBeLessThan(0.05);
+    manager.dispose();
+  });
+
   it('cuts down the leading Red bots to show a repulse', () => {
     const scene = new THREE.Scene();
     const onBotDowned = vi.fn();

@@ -1,27 +1,26 @@
 import { expect, test, type Page } from '@playwright/test';
 
-async function openUnityBattle(page: Page): Promise<void> {
-  await page.goto('/');
+async function openBattle(
+  page: Page,
+  options: { debug?: boolean } = {},
+): Promise<void> {
+  await page.goto(options.debug ? '/?debug=1' : '/');
   await page.getByTestId('intro-next').click();
   await page.getByTestId('battle-card-luding').click();
   await expect(page.getByTestId('battle-loading')).toBeVisible();
   await expect(page.getByTestId('battle-screen')).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByTestId('unity-frame')).toBeVisible();
-  await expect(page.locator('[data-battle-started="true"]')).toBeVisible({ timeout: 30_000 });
-}
-
-async function notifyUnityVictory(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    const frame = document.querySelector<HTMLIFrameElement>('[data-testid="unity-frame"]');
-    window.dispatchEvent(new MessageEvent('message', {
-      source: frame?.contentWindow ?? null,
-      data: { type: 'campaign1934', event: 'victory' },
-    }));
+  await expect(page.locator('[data-battle-started="true"]')).toBeVisible({
+    timeout: 30_000,
   });
 }
 
+async function pauseBattle(page: Page): Promise<void> {
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('pause-overlay')).toBeVisible();
+}
+
 async function completeQuiz(page: Page): Promise<void> {
-  await expect(page.getByTestId('quiz-screen')).toBeVisible();
+  await expect(page.getByTestId('quiz-screen')).toBeVisible({ timeout: 15_000 });
   for (let question = 0; question < 5; question += 1) {
     await page.locator('[data-correct="true"]').click();
     await page.getByTestId('quiz-next').click();
@@ -29,17 +28,12 @@ async function completeQuiz(page: Page): Promise<void> {
   await page.getByTestId('quiz-finish').click();
 }
 
-test('walks from the introduction to the Unity WebGL battle', async ({ page }) => {
-  await openUnityBattle(page);
-  const frame = page.frameLocator('[data-testid="unity-frame"]');
-  await expect(frame.locator('#unity-container')).toBeVisible({ timeout: 30_000 });
-  const canvas = frame.locator('#unity-canvas');
-  await expect(canvas).toBeVisible();
-  await expect(canvas).toHaveAttribute('data-unity-ready', 'true', { timeout: 30_000 });
+test('walks from the introduction into the Three.js battle', async ({ page }) => {
+  await openBattle(page);
 
-  await canvas.dispatchEvent('pointerdown');
-  await expect(page.locator('[data-unity-running="true"]')).toBeVisible({ timeout: 15_000 });
-  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('battle-root').locator('canvas')).toBeVisible();
+  await expect(page.locator('[data-hud="phase"]')).toHaveText('丛林接敌');
+  await expect(page.getByTestId('staging-overlay')).toBeHidden();
 });
 
 test('locked battle cards stay on the overview', async ({ page }) => {
@@ -50,37 +44,49 @@ test('locked battle cards stay on the overview', async ({ page }) => {
   await expect(page.getByTestId('coming-soon')).toContainText('即将开放');
 });
 
-test('battle shell exposes exit and restart controls', async ({ page }) => {
-  await openUnityBattle(page);
-  await expect(page.getByTestId('unity-exit')).toBeVisible();
-  await expect(page.getByTestId('unity-restart')).toBeVisible();
-  await page.getByTestId('unity-exit').click();
+test('pause menu exits back to the overview', async ({ page }) => {
+  await openBattle(page);
+  await pauseBattle(page);
+
+  await expect(page.getByTestId('pause-resume')).toBeVisible();
+  await expect(page.getByTestId('pause-restart')).toBeVisible();
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByTestId('pause-exit').click();
   await expect(page.locator('[data-battle-id]')).toHaveCount(6);
 });
 
-test('restart returns through the loading screen', async ({ page }) => {
-  await openUnityBattle(page);
-  await page.getByTestId('unity-restart').click();
+test('pause menu can resume and restart through the loading screen', async ({ page }) => {
+  await openBattle(page);
+  await pauseBattle(page);
+
+  await page.getByTestId('pause-resume').click();
+  await expect(page.getByTestId('pause-overlay')).toBeHidden();
+
+  await pauseBattle(page);
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByTestId('pause-restart').click();
   await expect(page.getByTestId('battle-loading')).toBeVisible();
-  await expect(page.getByTestId('unity-frame')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId('battle-screen')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('[data-battle-started="true"]')).toBeVisible({
+    timeout: 30_000,
+  });
 });
 
-test('Unity victory enters the quiz and result flow', async ({ page }) => {
-  await openUnityBattle(page);
-  await notifyUnityVictory(page);
+test('victory enters the quiz and result flow', async ({ page }) => {
+  await openBattle(page, { debug: true });
+  await expect(page.getByTestId('debug-panel')).toBeVisible();
+
+  await page.locator('[data-debug-action="victory"]').click();
   await completeQuiz(page);
+
   await expect(page.locator('.result-shell h1')).toHaveText('夺桥成功');
   await expect(page.getByTestId('result-quiz')).toContainText('5');
-});
-
-test('unrelated window messages cannot finish the battle', async ({ page }) => {
-  await openUnityBattle(page);
-  await page.evaluate(() => window.postMessage({ type: 'campaign1934', event: 'victory' }, '*'));
-  await expect(page.getByTestId('battle-screen')).toBeVisible();
+  await page.getByTestId('result-back').click();
+  await expect(page.locator('[data-battle-id]')).toHaveCount(6);
 });
 
 test('refresh returns to the introduction', async ({ page }) => {
-  await openUnityBattle(page);
+  await openBattle(page);
   await page.reload();
   await expect(page.getByTestId('intro-next')).toBeVisible();
 });

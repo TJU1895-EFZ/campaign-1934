@@ -44,9 +44,9 @@ export function artilleryShellPosition(
 ): { x: number; y: number; z: number } {
   const progress = Math.min(1, Math.max(0, elapsedSeconds / Math.max(0.001, flightSeconds)));
   const y = artilleryShellHeight(targetHeight, elapsedSeconds, flightSeconds);
-  // Arc from the KMT side (positive Z, far bank) down to the target
-  const startX = targetX + (Math.random() - 0.5) * 4;
-  const startZ = targetZ + 18 + Math.random() * 12; // 18–30 meters behind target, from KMT direction
+  // Arc from the Nationalist-held side (negative Z, far bank) down to the target.
+  const startX = targetX + (Math.random() - 0.5) * 8;
+  const startZ = targetZ - (18 + Math.random() * 12); // 18–30 m beyond the target, KMT side
   return {
     x: startX + (targetX - startX) * progress,
     y,

@@ -337,9 +337,14 @@ export class BattleRuntime {
     }
   }
 
-  private handlePhase(phaseName: string, narrationId: string, index: number): void {
+  private handlePhase(
+    phaseName: string,
+    narrationId: string,
+    index: number,
+    force = false,
+  ): void {
     // D2: intercept phase 3→4 transition to insert charge cutscene
-    if (index === 3 && this.battleStarted && !this.d2TransitionActive) {
+    if (!force && index === 3 && this.battleStarted && !this.d2TransitionActive) {
       this.startD2Transition(narrationId);
       return;
     }
@@ -445,19 +450,18 @@ export class BattleRuntime {
 
     const now = performance.now();
     if (now >= this.d2TransitionEndsAt) {
-      // End cutscene: proceed to phase 4 normally
+      // End cutscene: hand control back and apply the street phase that the
+      // intercept in handlePhase skipped.
       this.d2TransitionActive = false;
       this.d2ChargeBots = [];
       this.d2VocalPlayed = false;
 
-      // Advance to phase 4
-      const nextIndex = this.director.phaseIndex + 1;
-      if (nextIndex < PHASES.length) {
-        this.handlePhase(
-          PHASES[nextIndex].name,
-          PHASES[nextIndex].narrationId,
-          nextIndex,
-        );
+      this.player.setEnabled(true);
+      this.weapon.setEnabled(true);
+      const phaseIndex = this.director.phaseIndex;
+      const phase = PHASES[phaseIndex];
+      if (phase) {
+        this.handlePhase(phase.name, phase.narrationId, phaseIndex, true);
       }
       return;
     }
@@ -471,6 +475,7 @@ export class BattleRuntime {
       }
       // Animate them moving
       bot.setMoving(true);
+      bot.updateView(dt);
     }
 
     // Play vocal cue at start of transition
@@ -511,6 +516,7 @@ export class BattleRuntime {
     this.weapon.setEnabled(false);
     this.battleScene.startEnemyConvoy();
     this.hud.setSubtitle('红军夺桥成功。敌军残部乘车沿公路撤退。');
+    this.audio.stopBattleBgm();
     this.audio.playVictory();
     if (document.pointerLockElement) {
       document.exitPointerLock();
@@ -590,6 +596,7 @@ export class BattleRuntime {
     this.weapon.setEnabled(true);
     this.audio.unlock();
     this.audio.playHorn();
+    this.audio.startBattleBgm();
     this.bots.releaseStagingFormation();
     const text = this.pendingNarration;
     this.pendingNarration = null;

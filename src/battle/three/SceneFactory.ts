@@ -1046,17 +1046,26 @@ export function createBattleScene(host: HTMLElement): BattleScene {
     life: number;
     maxLife: number;
   }> = [];
-  const artilleryShellGeometry = track(new THREE.SphereGeometry(0.18, 6, 5));
+  // Artillery shell: dark sphere with a smoke trail behind it.
+  const artilleryShellGeometry = track(new THREE.SphereGeometry(0.3, 8, 6));
   const artilleryShellMaterial = track(
     new THREE.MeshBasicMaterial({ color: 0x272321 }),
   );
+  // Smoke trail particles that follow the shell.
+  const smokeTrailGeometry = track(new THREE.SphereGeometry(0.2, 5, 4));
+  const smokeTrailMaterial = track(
+    new THREE.MeshBasicMaterial({ color: 0x8a8a8a, transparent: true, opacity: 0.45 }),
+  );
+  const ARTILLERY_TRAIL_LENGTH = 24;
   const artilleryShells: Array<{
     shell: THREE.Mesh;
     trail: THREE.Sprite;
+    trailMeshes: THREE.Mesh[];
     target: THREE.Vector3;
     elapsed: number;
     onImpact: () => void;
     startPos: THREE.Vector3;
+    _trailHistory: Array<{ x: number; y: number; z: number }>;
   }> = [];
 
   const spawnArtilleryStrike = (position: THREE.Vector3): void => {
@@ -1116,11 +1125,32 @@ export function createBattleScene(host: HTMLElement): BattleScene {
     const trail = new THREE.Sprite(trailMaterial);
     scene.add(trail);
 
+    // Smoke trail meshes for the shell's arc path.
+    const trailMeshes: THREE.Mesh[] = [];
+    for (let i = 0; i < ARTILLERY_TRAIL_LENGTH; i += 1) {
+      const material = track(smokeTrailMaterial.clone());
+      const mesh = new THREE.Mesh(smokeTrailGeometry, material);
+      mesh.visible = false;
+      scene.add(mesh);
+      trailMeshes.push(mesh);
+    }
+
+    // Pick the launch point once; the shell then follows a straight, stable
+    // line back to the target instead of re-randomizing every frame.
     const pos = artilleryShellPosition(target.x, target.z, target.y, 0);
     shell.position.set(pos.x, pos.y, pos.z);
     trail.position.set(pos.x, pos.y + 0.7, pos.z);
 
-    artilleryShells.push({ shell, trail, target, elapsed: 0, onImpact, startPos: shell.position.clone() });
+    artilleryShells.push({
+      shell,
+      trail,
+      trailMeshes,
+      target,
+      elapsed: 0,
+      onImpact,
+      startPos: new THREE.Vector3(pos.x, pos.y, pos.z),
+      _trailHistory: [],
+    });
   };
 
   const getActiveArtilleryShellCount = (): number => artilleryShells.length;
@@ -1193,12 +1223,49 @@ export function createBattleScene(host: HTMLElement): BattleScene {
     for (let i = artilleryShells.length - 1; i >= 0; i -= 1) {
       const item = artilleryShells[i];
       item.elapsed += dt;
-      item.shell.position.y = artilleryShellHeight(item.target.y, item.elapsed);
-      item.trail.position.copy(item.shell.position);
-      item.trail.position.y += 0.7;
+
+      // Interpolate the original straight trajectory: the launch point is
+      // fixed at spawn, so the shell flies a smooth arc toward the target.
+      const progress = Math.min(
+        1,
+        item.elapsed / ARTILLERY_SHELL_FLIGHT_SECONDS,
+      );
+      const x = item.startPos.x + (item.target.x - item.startPos.x) * progress;
+      const y = artilleryShellHeight(item.target.y, item.elapsed);
+      const z = item.startPos.z + (item.target.z - item.startPos.z) * progress;
+      item.shell.position.set(x, y, z);
+      item.trail.position.set(x, y + 0.7, z);
+
+      // Record trail history for smoke trail visualization.
+      item._trailHistory.push({ x, y, z });
+      if (item._trailHistory.length > ARTILLERY_TRAIL_LENGTH) {
+        item._trailHistory.shift();
+      }
+
+      // Render smoke trail behind the shell.
+      for (let t = 0; t < item.trailMeshes.length; t += 1) {
+        const mesh = item.trailMeshes[t];
+        const histIndex = item._trailHistory.length - 1 - t;
+        if (histIndex >= 0) {
+          const hp = item._trailHistory[histIndex];
+          mesh.position.set(hp.x, hp.y, hp.z);
+          mesh.visible = true;
+          const fade = 1 - t / item.trailMeshes.length;
+          (mesh.material as THREE.MeshBasicMaterial).opacity = fade * 0.45;
+          mesh.scale.setScalar(0.45 + fade * 0.9);
+        } else {
+          mesh.visible = false;
+        }
+      }
+
       if (item.elapsed < ARTILLERY_SHELL_FLIGHT_SECONDS) continue;
 
+      // Clean up shell and trail.
       scene.remove(item.shell, item.trail);
+      for (const tm of item.trailMeshes) {
+        scene.remove(tm);
+        (tm.material as THREE.Material).dispose();
+      }
       spawnArtilleryStrike(item.target);
       item.onImpact();
       artilleryShells.splice(i, 1);

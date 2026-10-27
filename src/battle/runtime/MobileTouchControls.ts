@@ -108,6 +108,9 @@ export class MobileTouchControls {
     if (this.disposed) return;
     this.disposed = true;
 
+    // Desktop builds return from the constructor before any DOM is created.
+    if (!this.isMobile) return;
+
     this.joystickZone.removeEventListener('touchstart', this.handleJoystickStart);
     this.joystickZone.removeEventListener('touchmove', this.handleJoystickMove);
     this.joystickZone.removeEventListener('touchend', this.handleJoystickEnd);

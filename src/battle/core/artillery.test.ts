@@ -5,6 +5,7 @@ import {
   ARTILLERY_SHELL_FLIGHT_SECONDS,
   artilleryDamageAt,
   artilleryShellHeight,
+  artilleryShellPosition,
   isInArtilleryBlast,
   nextArtilleryInterval,
 } from './artillery';
@@ -39,5 +40,20 @@ describe('artillery', () => {
     expect(middle).toBeGreaterThan(impact);
     expect(middle).toBeLessThan(start);
     expect(impact).toBe(8);
+  });
+
+  it('flies in from the Nationalist side and lands on the target', () => {
+    const targetZ = -38;
+    const start = artilleryShellPosition(0, targetZ, 8, 0);
+    const impact = artilleryShellPosition(
+      0,
+      targetZ,
+      8,
+      ARTILLERY_SHELL_FLIGHT_SECONDS,
+    );
+
+    expect(start.z).toBeLessThan(targetZ - 17);
+    expect(impact.z).toBeCloseTo(targetZ, 5);
+    expect(impact.y).toBe(8);
   });
 });

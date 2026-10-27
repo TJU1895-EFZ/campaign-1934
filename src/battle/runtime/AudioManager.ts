@@ -12,6 +12,10 @@ export class AudioManager {
   private gunshotBuffer: AudioBuffer | null = null;
   private battleBgBuffer: AudioBuffer | null = null;
   private battleBgSource: AudioBufferSourceNode | null = null;
+  private battleBgmBuffer: AudioBuffer | null = null;
+  private battleBgmSource: AudioBufferSourceNode | null = null;
+  private battleBgmGain: GainNode | null = null;
+  private battleBgmWanted = false;
   private distantTimer: number | null = null;
   private settings: Settings;
 
@@ -32,6 +36,35 @@ export class AudioManager {
   setSettings(settings: Settings): void {
     this.settings = { ...settings };
     this.applyVolumes();
+  }
+
+  /** Start the battle BGM loop (called when combat begins). */
+  startBattleBgm(): void {
+    this.battleBgmWanted = true;
+    // The sample may still be decoding when the battle starts; the loader
+    // calls startBattleBgm again once it is ready.
+    if (!this.context || !this.battleBgmBuffer || this.battleBgmSource) return;
+    const source = this.context.createBufferSource();
+    source.buffer = this.battleBgmBuffer;
+    source.loop = true;
+    const gain = this.context.createGain();
+    gain.gain.value = 0.45;
+    // Music follows the master volume, not the SFX bus.
+    source.connect(gain).connect(this.master ?? this.context.destination);
+    source.start();
+    this.battleBgmSource = source;
+    this.battleBgmGain = gain;
+  }
+
+  /** Stop the battle BGM loop (called when combat ends). */
+  stopBattleBgm(): void {
+    this.battleBgmWanted = false;
+    if (!this.battleBgmSource) return;
+    try { this.battleBgmSource.stop(); } catch { /* already stopped */ }
+    this.battleBgmSource.disconnect();
+    this.battleBgmSource = null;
+    this.battleBgmGain?.disconnect();
+    this.battleBgmGain = null;
   }
 
   playRifle(): void {
@@ -166,6 +199,17 @@ export class AudioManager {
       this.battleBgSource.disconnect();
       this.battleBgSource = null;
     }
+    if (this.battleBgmSource) {
+      try {
+        this.battleBgmSource.stop();
+      } catch {
+        // Already stopped.
+      }
+      this.battleBgmSource.disconnect();
+      this.battleBgmSource = null;
+    }
+    this.battleBgmGain?.disconnect();
+    this.battleBgmGain = null;
     for (const oscillator of this.ambienceOscillators) {
       try {
         oscillator.stop();
@@ -186,6 +230,7 @@ export class AudioManager {
     this.noiseBuffer = null;
     this.gunshotBuffer = null;
     this.battleBgBuffer = null;
+    this.battleBgmBuffer = null;
   }
 
   private createContext(): void {
@@ -214,6 +259,7 @@ export class AudioManager {
       this.applyVolumes();
       void this.loadGunshotSample(context);
       void this.loadBattleBgSample(context);
+      void this.loadBattleBgmSample(context);
       this.startAmbience();
     } catch {
       this.context = null;
@@ -322,6 +368,23 @@ export class AudioManager {
       }
     } catch {
       // No battle background audio available; rely on procedural ambience.
+    }
+  }
+
+  private async loadBattleBgmSample(context: AudioContext): Promise<void> {
+    try {
+      const response = await fetch(`${import.meta.env.BASE_URL}assets/audio/battle_bgm.mp3`);
+      if (!response.ok) return;
+      const data = await response.arrayBuffer();
+      const buffer = await context.decodeAudioData(data);
+      if (this.context === context) {
+        this.battleBgmBuffer = buffer;
+        if (this.battleBgmWanted) {
+          this.startBattleBgm();
+        }
+      }
+    } catch {
+      // No battle BGM available; fall back to procedural ambience.
     }
   }
 
