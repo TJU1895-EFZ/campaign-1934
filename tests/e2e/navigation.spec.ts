@@ -33,7 +33,13 @@ test('walks from the introduction to the Unity WebGL battle', async ({ page }) =
   await openUnityBattle(page);
   const frame = page.frameLocator('[data-testid="unity-frame"]');
   await expect(frame.locator('#unity-container')).toBeVisible({ timeout: 30_000 });
-  await expect(frame.locator('#unity-canvas')).toBeVisible();
+  const canvas = frame.locator('#unity-canvas');
+  await expect(canvas).toBeVisible();
+  await expect(canvas).toHaveAttribute('data-unity-ready', 'true', { timeout: 30_000 });
+
+  await canvas.dispatchEvent('pointerdown');
+  await expect(page.locator('[data-unity-running="true"]')).toBeVisible({ timeout: 15_000 });
+  await page.keyboard.press('Escape');
 });
 
 test('locked battle cards stay on the overview', async ({ page }) => {

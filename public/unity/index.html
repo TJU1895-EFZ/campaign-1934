@@ -31,6 +31,15 @@
       var progressBarFull = document.querySelector("#unity-progress-bar-full");
       var fullscreenButton = document.querySelector("#unity-fullscreen-button");
       var warningBanner = document.querySelector("#unity-warning");
+      var unityInstance = null;
+      var pendingBattleStart = false;
+
+      const startBattle = () => {
+        if (unityInstance) unityInstance.SendMessage("Main Camera", "BeginBattle");
+        else pendingBattleStart = true;
+      };
+      canvas.addEventListener("pointerdown", startBattle, { once: true });
+      window.addEventListener("keydown", startBattle, { once: true });
 
       // Shows a temporary message banner/ribbon for a few seconds, or
       // a permanent error message on top of the canvas if type=='error'.
@@ -114,8 +123,11 @@
       script.onload = () => {
         createUnityInstance(canvas, config, (progress) => {
           progressBarFull.style.width = 100 * progress + "%";
-              }).then((unityInstance) => {
+              }).then((instance) => {
+                unityInstance = instance;
                 loadingBar.style.display = "none";
+                canvas.dataset.unityReady = "true";
+                if (pendingBattleStart) startBattle();
                 fullscreenButton.onclick = () => {
                   unityInstance.SetFullscreen(1);
                 };

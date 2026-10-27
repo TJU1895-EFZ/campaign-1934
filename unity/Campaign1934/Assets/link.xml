@@ -1,0 +1,8 @@
+<linker>
+  <!--
+    BattleRuntime creates primitive geometry at runtime. Unity's WebGL engine
+    stripping cannot infer the collider types added internally by
+    GameObject.CreatePrimitive, so preserve the physics module explicitly.
+  -->
+  <assembly fullname="UnityEngine.PhysicsModule" preserve="all" />
+</linker>

@@ -43,6 +43,12 @@ describe('BattleScreen Unity shell', () => {
     screen.mount(root);
     const frame = root.querySelector<HTMLIFrameElement>('[data-testid="unity-frame"]')!;
 
+    window.dispatchEvent(new MessageEvent('message', {
+      source: frame.contentWindow,
+      data: { type: 'campaign1934', event: 'started' },
+    }));
+    expect(root.querySelector('[data-unity-running="true"]')).not.toBeNull();
+
     window.dispatchEvent(new MessageEvent('message', { data: { type: 'campaign1934', event: 'victory' } }));
     expect(onVictory).not.toHaveBeenCalled();
     window.dispatchEvent(new MessageEvent('message', {

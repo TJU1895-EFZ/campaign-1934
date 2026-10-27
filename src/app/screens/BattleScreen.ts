@@ -13,7 +13,7 @@ interface BattleScreenOptions {
 
 interface UnityMessage {
   type: 'campaign1934';
-  event: 'victory' | 'error';
+  event: 'started' | 'victory' | 'error';
   message?: string;
 }
 
@@ -74,6 +74,10 @@ export class BattleScreen implements Screen {
 
   private handleMessage = (event: MessageEvent<unknown>): void => {
     if (event.source !== this.iframe?.contentWindow || !this.isUnityMessage(event.data)) return;
+    if (event.data.event === 'started') {
+      this.root?.querySelector('.battle-screen')?.setAttribute('data-unity-running', 'true');
+      return;
+    }
     if (event.data.event === 'error') {
       this.fail(event.data.message ?? 'Unity WebGL 战役场景发生错误。');
       return;
@@ -85,7 +89,8 @@ export class BattleScreen implements Screen {
   private isUnityMessage(value: unknown): value is UnityMessage {
     if (!value || typeof value !== 'object') return false;
     const candidate = value as Partial<UnityMessage>;
-    return candidate.type === 'campaign1934' && (candidate.event === 'victory' || candidate.event === 'error');
+    return candidate.type === 'campaign1934' &&
+      (candidate.event === 'started' || candidate.event === 'victory' || candidate.event === 'error');
   }
 
   private fail(message: string): void {

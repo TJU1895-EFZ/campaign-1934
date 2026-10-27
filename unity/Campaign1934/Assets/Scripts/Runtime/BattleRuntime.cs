@@ -56,7 +56,7 @@ namespace Campaign1934.Runtime
             if (!battleStarted)
             {
                 if ((Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame) || (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame))
-                { battleStarted = true; audioManager.EnterBattle(); titleText.gameObject.SetActive(false); playerController.enabled = true; }
+                    BeginBattle();
                 return;
             }
 
@@ -70,6 +70,19 @@ namespace Campaign1934.Runtime
             DirectorSnapshot snapshot = director.Snapshot;
             statusText.text = $"{snapshot.PhaseName}\n任务：{snapshot.Objective}\n红军 {snapshot.RedAlive}  守军 {snapshot.KmtAlive}  FPS {smoothedFps:0}\n{(cinematicTimer > 0f ? "先锋突击队正冲入碉堡……" : "WASD 移动 · 鼠标观察 · 点击射击")}";
             if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) FirePlayerWeapon();
+        }
+
+        public void BeginBattle()
+        {
+            if (battleStarted) return;
+            battleStarted = true;
+            audioManager.EnterBattle();
+            titleText.gameObject.SetActive(false);
+            playerController.enabled = true;
+            Debug.Log("Campaign1934 battle started.");
+#if UNITY_WEBGL && !UNITY_EDITOR
+            Campaign1934Notify("started");
+#endif
         }
 
         public bool Spawn(Faction faction, int count, bool key)
