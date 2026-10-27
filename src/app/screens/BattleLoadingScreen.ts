@@ -30,11 +30,13 @@ export class BattleLoadingScreen implements Screen {
           </div>
           <div class="loading-tips">
             <p><strong>移动</strong> WASD</p>
+            <p><strong>冲刺 / 跳跃</strong> Shift / Space</p>
+            <p><strong>下蹲</strong> C</p>
             <p><strong>视角</strong> 鼠标</p>
             <p><strong>射击</strong> 鼠标左键</p>
             <p><strong>换弹</strong> R</p>
             <p><strong>暂停</strong> Esc</p>
-            <p><strong>移动端</strong> 触屏操控</p>
+            <p><strong>触屏</strong> 摇杆 / 瞄准 / 开火</p>
           </div>
           <button type="button" class="btn btn-ghost" data-testid="loading-back">返回总览</button>
         </div>

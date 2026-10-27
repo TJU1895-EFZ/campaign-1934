@@ -41,7 +41,7 @@ export class IntroScreen implements Screen {
               <span>${INTRO.cta}</span>
               <span class="btn-arrow" aria-hidden="true">→</span>
             </button>
-            <p class="intro-hint">建议使用电脑浏览器，配合键盘与鼠标体验。</p>
+            <p class="intro-hint">桌面端建议使用键盘与鼠标体验；触屏设备可使用屏幕上的虚拟摇杆与开火按钮。</p>
           </div>
           <footer class="intro-footer">
             <span>1934 — 1936</span>

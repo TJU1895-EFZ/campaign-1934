@@ -84,7 +84,7 @@ export class OverviewScreen implements Screen {
           </span>
           <span class="card-name">${battle.name}</span>
           <span class="card-desc">${battle.description}</span>
-          <span class="card-action">${battle.playable ? '进入战斗 →' : '查看详情'}</span>
+          <span class="card-action">${battle.playable ? '进入战斗 →' : '敬请期待'}</span>
         </span>
       </button>
     `;

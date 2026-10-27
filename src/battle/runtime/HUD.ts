@@ -61,7 +61,7 @@ export class HUD {
       <div class="hit-marker" data-hud="hit-marker"></div>
       <div class="damage-vignette" data-hud="damage"></div>
       <div class="subtitle" data-hud="subtitle" aria-live="polite"></div>
-      <div class="lock-hint" data-hud="lock-hint">点击画面开始 · Esc 暂停</div>
+      <div class="lock-hint" data-hud="lock-hint">点击画面锁定鼠标 · Esc 暂停</div>
       <div class="hud-bottom">
         <div class="hud-health">
           <div class="health-label">

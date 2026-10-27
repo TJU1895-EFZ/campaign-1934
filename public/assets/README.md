@@ -2,7 +2,7 @@
 
 > 更新时间：2026-10-27
 > 当前版本：V1（Three.js WebGL）
-> 所有素材由项目方提供或为项目自定义素材；构建只使用 `AudioManager` / `SceneFactory` 实际引用的文件。
+> 所有素材由项目方提供或为项目自定义素材；运行时只加载 `AudioManager` / `SceneFactory` 实际引用的文件，其余素材随仓库保留但不会主动加载。
 
 ---
 
