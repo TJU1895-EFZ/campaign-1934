@@ -16,6 +16,10 @@ export interface PlayerCallbacks {
   onPauseRequest(): void;
   onLockChange(locked: boolean): void;
   onFootstep(): void;
+  /** Mobile joystick: moveX (-1 to 1), moveY (-1 to 1, forward is positive) */
+  onMobileMove?(moveX: number, moveY: number): void;
+  /** Mobile aim: pixel deltas from touch drag */
+  onMobileAim?(deltaX: number, deltaY: number): void;
 }
 
 export class PlayerController {
@@ -32,6 +36,8 @@ export class PlayerController {
   private readonly forward = new THREE.Vector3();
   private readonly right = new THREE.Vector3();
   private readonly movement = new THREE.Vector3();
+  private mobileMoveX = 0;
+  private mobileMoveY = 0;
 
   private yaw = 0;
   private pitch = -0.1;
@@ -176,6 +182,10 @@ export class PlayerController {
     if (this.keys.has('KeyD')) rightInput += 1;
     if (this.keys.has('KeyA')) rightInput -= 1;
 
+    // Blend mobile joystick input (positive Y = forward, positive X = right)
+    forwardInput += this.mobileMoveY;
+    rightInput += this.mobileMoveX;
+
     this.forward.set(-Math.sin(this.yaw), 0, -Math.cos(this.yaw));
     this.right.set(Math.cos(this.yaw), 0, -Math.sin(this.yaw));
     this.movement
@@ -208,6 +218,20 @@ export class PlayerController {
     this.clampToBattlefield();
     if (this.falling) return;
     this.camera.position.y = this.bounds.deckY + this.eyeHeight + this.jumpOffset;
+    this.applyRotation();
+  }
+
+  /** Apply mobile joystick input directly. */
+  setMobileMove(moveX: number, moveY: number): void {
+    this.mobileMoveX = moveX;
+    this.mobileMoveY = moveY;
+  }
+
+  /** Apply mobile aim deltas. */
+  applyMobileAim(deltaX: number, deltaY: number): void {
+    if (this.downed || this.paused || !this.enabled) return;
+    this.yaw -= deltaX * 0.003;
+    this.pitch -= deltaY * 0.003;
     this.applyRotation();
   }
 

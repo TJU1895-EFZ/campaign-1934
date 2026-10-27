@@ -17,42 +17,6 @@
   cursor: crosshair;
 }
 
-.unity-frame {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  background: #05090b;
-}
-
-.unity-controls {
-  position: fixed;
-  z-index: 5;
-  top: 14px;
-  right: 14px;
-  display: flex;
-  gap: 8px;
-}
-
-.unity-controls .btn {
-  min-height: 36px;
-  padding: 7px 12px;
-  background: rgba(5, 9, 11, 0.72);
-}
-
-.unity-help {
-  position: fixed;
-  z-index: 5;
-  bottom: 12px;
-  left: 50%;
-  margin: 0;
-  padding: 7px 12px;
-  color: rgba(239, 230, 212, 0.78);
-  background: rgba(5, 9, 11, 0.68);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  transform: translateX(-50%);
-  pointer-events: none;
-}
 
 .battle-screen.is-paused .battle-root canvas {
   cursor: default;
@@ -566,4 +530,147 @@
   color: var(--paper-muted);
   font-size: 12px;
   letter-spacing: 0.1em;
+}
+
+/* ------------------------------------------------------------
+   Mobile touch controls
+   ------------------------------------------------------------ */
+.mobile-controls {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  display: none;
+}
+
+.mobile-controls.is-active {
+  display: block;
+}
+
+/* Virtual joystick (left side) */
+.mobile-joystick-zone {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  height: 50%;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.mobile-joystick-base {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(239, 230, 212, 0.08);
+  border: 1px solid rgba(239, 230, 212, 0.18);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.mobile-joystick-thumb {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(239, 230, 212, 0.22);
+  border: 1px solid rgba(239, 230, 212, 0.35);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: none;
+}
+
+/* Fire button (right side) */
+.mobile-fire-btn {
+  position: absolute;
+  bottom: 40px;
+  right: 28px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(178, 58, 47, 0.35);
+  border: 2px solid rgba(178, 58, 47, 0.6);
+  pointer-events: auto;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-fire-btn::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(239, 230, 212, 0.7);
+}
+
+.mobile-fire-btn.is-pressed {
+  background: rgba(178, 58, 47, 0.6);
+  transform: scale(0.92);
+}
+
+/* Aim zone (right side, above fire button) */
+.mobile-aim-zone {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 55%;
+  height: 65%;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+/* Mobile HUD adjustments */
+.mobile-hint {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(239, 230, 212, 0.5);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+  user-select: none;
+  text-align: center;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .mobile-controls {
+    display: block;
+  }
+
+  .lock-hint {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .mobile-joystick-zone {
+    width: 40%;
+  }
+
+  .mobile-aim-zone {
+    width: 60%;
+  }
+
+  .mobile-fire-btn {
+    width: 64px;
+    height: 64px;
+    bottom: 32px;
+    right: 20px;
+  }
+
+  .mobile-joystick-base {
+    width: 100px;
+    height: 100px;
+  }
+
+  .mobile-joystick-thumb {
+    width: 40px;
+    height: 40px;
+  }
 }

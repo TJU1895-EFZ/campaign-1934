@@ -19,6 +19,7 @@ import { createBattleScene, type BattleScene } from '../three/SceneFactory';
 import { AudioManager } from './AudioManager';
 import { BotManager, type Bot, type BotWorld } from './BotManager';
 import { HUD } from './HUD';
+import { MobileTouchControls } from './MobileTouchControls';
 import { NarrationPlayer } from './NarrationPlayer';
 import { PlayerController } from './PlayerController';
 import { TracerSystem } from './TracerSystem';
@@ -74,6 +75,7 @@ export class BattleRuntime {
   private lowFpsWindows = 0;
   private highFpsWindows = 0;
   private victoryTimer: number | null = null;
+  private mobileControls: MobileTouchControls | null = null;
 
   // D2: bunker→street transition cutscene state
   private d2TransitionActive = false;
@@ -133,6 +135,8 @@ export class BattleRuntime {
         onPauseRequest: () => this.pause(),
         onLockChange: (locked) => this.hud.setLocked(locked),
         onFootstep: () => this.audio.playFootstep(),
+        onMobileMove: (moveX, moveY) => this.player.setMobileMove(moveX, moveY),
+        onMobileAim: (deltaX, deltaY) => this.player.applyMobileAim(deltaX, deltaY),
       },
     );
 
@@ -206,6 +210,14 @@ export class BattleRuntime {
     this.host.addEventListener('pointerdown', this.handleFirstPointer, { once: true });
     this.host.addEventListener('click', this.handleFirstPointer, { once: true });
 
+    // Mobile touch controls (only activates on touch devices)
+    this.mobileControls = new MobileTouchControls(this.host, {
+      onMove: (moveX, moveY) => this.player.setMobileMove(moveX, moveY),
+      onAim: (deltaX, deltaY) => this.player.applyMobileAim(deltaX, deltaY),
+      onTriggerDown: () => this.weapon.setTrigger(true),
+      onTriggerUp: () => this.weapon.setTrigger(false),
+    });
+
     if (this.debugEnabled) {
       (window as unknown as { __battleDebug?: unknown }).__battleDebug = {
         scene: this.battleScene.scene,
@@ -246,6 +258,7 @@ export class BattleRuntime {
     this.bots.dispose();
     this.tracers.dispose();
     this.audio.dispose();
+    this.mobileControls?.dispose();
     this.battleScene.dispose();
   }
 
